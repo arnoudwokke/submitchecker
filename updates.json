@@ -4,7 +4,8 @@
       "updates": [
         {
           "version": "1.7.1",
-          "update_link": "https://github.com/arnoudwokke/submitchecker/releases/download/v1.7.1/tweakers-submitchecker-1.7.1.xpi"
+          "update_link": "https://raw.githubusercontent.com/arnoudwokke/submitchecker/main/releases/tweakers-submitchecker-1.7.1.xpi",
+          "update_hash": "sha256:a17c67da2ec91e42f42c53c36eb9f43ac3bcff578c5e95c59f46880b36760333"
         }
       ]
     }
