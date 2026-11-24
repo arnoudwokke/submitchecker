@@ -70,7 +70,7 @@
 
   const DAY = 86400000;
   const CONCURRENCY = 4;
-  let settings = { days: 2, auto: true };
+  let settings = { days: 2, auto: true, feed: true };
   let running = false;
 
   const isInternal = (a) => {
@@ -108,8 +108,8 @@
   }
 
   function setStatus(tr, cls, text, tip) {
-    let s = tr.querySelector(".sc-status:not(.sc-dup)");
-    if (!s) { s = document.createElement("span"); const dup = tr.querySelector(".sc-dup"); dup ? dup.before(s) : titleCell(tr).appendChild(s); }
+    let s = tr.querySelector(".sc-status:not(.sc-dup):not(.sc-feed)");
+    if (!s) { s = document.createElement("span"); const dup = tr.querySelector(".sc-dup, .sc-feed"); dup ? dup.before(s) : titleCell(tr).appendChild(s); }
     s.className = "sc-status " + cls;
     s.textContent = text;
     s.title = tip || "";
@@ -143,7 +143,7 @@
 
   function rowTitle(tr) {
     const c = titleCell(tr).cloneNode(true);
-    c.querySelectorAll(".sc-status, .sc-dup").forEach((e) => e.remove());
+    c.querySelectorAll(".sc-status, .sc-dup, .sc-feed").forEach((e) => e.remove());
     return c.textContent.replace(/\s+/g, " ").trim();
   }
 
@@ -180,9 +180,9 @@
     const inter = shared.length;
     const jaccard = inter / (a.size + b.size - inter);
     const overlap = inter / Math.min(a.size, b.size);
-    if (jaccard >= 0.4 || (inter >= 3 && overlap >= 0.5)) return true;
     // dezelfde kenmerkende namen/getallen (bv. "Cyberleek", "GTA", "6") en een flink deel van de korte titel
     const strong = shared.filter((w) => a.strong.has(w) || b.strong.has(w)).length;
+    if ((jaccard >= 0.4 && (inter >= 3 || strong >= 1)) || (inter >= 3 && overlap >= 0.5)) return true;
     return strong >= 3 || (strong >= 2 && inter >= 3 && overlap >= 0.35);
   }
 
@@ -216,13 +216,66 @@
     return n;
   }
 
+  // ---- Staat het al op Tweakers? (vergelijking met de RSS-feed) ----
+  const FEED_URL = "https://tweakers.net/feeds/mixed.xml";
+  let feedPromise = null;
+  function loadFeed() {
+    if (!feedPromise) feedPromise = (async () => {
+      const page = await fetchPage(FEED_URL + "?_=" + Date.now());
+      if (!page || !page.ok || !page.html) return [];
+      const xml = new DOMParser().parseFromString(page.html, "text/xml");
+      return [...xml.querySelectorAll("item, entry")].map((it) => {
+        const txt = (sel) => it.querySelector(sel)?.textContent?.trim() || "";
+        const link = txt("link") || it.querySelector("link")?.getAttribute("href") || txt("guid");
+        const descHtml = txt("description") || txt("summary") || txt("content");
+        const desc = new DOMParser().parseFromString(descHtml, "text/html");
+        const hrefs = [...desc.querySelectorAll("a[href]")].map((a) => a.getAttribute("href")).filter((h) => /^https?:/i.test(h));
+        const title = txt("title");
+        return { title, link, words: words(title), keys: new Set(hrefs.filter((h) => !/tweakers\.net/i.test(h)).map(normUrl)), date: txt("pubDate") || txt("published") };
+      }).filter((f) => f.title);
+    })().catch(() => []);
+    return feedPromise;
+  }
+
+  async function markFeed(rows) {
+    if (!settings.feed) return 0;
+    const feed = await loadFeed();
+    let n = 0;
+    for (const r of rows) {
+      r.tr.querySelector(".sc-feed")?.remove();
+      if (!r.keys) continue;
+      let hit = null, why = "";
+      for (const f of feed) {
+        if ([...r.keys].some((k) => f.keys.has(k))) { hit = f; why = "zelfde bron"; break; }
+        if (r.titles.some((a) => similar(a, f.words))) { hit = f; why = "lijkt op"; break; }
+      }
+      if (!hit) continue;
+      const a = document.createElement("a");
+      a.className = "sc-status sc-feed";
+      a.textContent = "mogelijk al op Tweakers";
+      a.href = hit.link;
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.title = `${why} Tweakers-artikel:\n${hit.title}${hit.date ? "\n" + hit.date : ""}`;
+      titleCell(r.tr).appendChild(a);
+      if (!r.cb.checked) {
+        r.cb.checked = true;
+        r.cb.dispatchEvent(new Event("change", { bubbles: true }));
+        n++;
+      }
+    }
+    return n;
+  }
+
   async function run() {
     if (running) return;
     running = true;
     const rows = findRows();
     const counter = document.querySelector(".sc-count");
     let done = 0, unknown = 0;
+    feedPromise = null; // feed opnieuw ophalen bij elke controle
     let checked = markDuplicates(rows);
+    checked += await markFeed(rows);
     const update = () => counter && (counter.textContent = `${done}/${rows.length} gecontroleerd · ${checked} aangevinkt · ${unknown} onbekend`);
     update();
 
@@ -256,6 +309,7 @@
     await Promise.all(Array.from({ length: CONCURRENCY }, worker));
     // nogmaals, nu met de echte artikellinks en -titels
     checked += markDuplicates(rows);
+    checked += await markFeed(rows);
     update();
     running = false;
   }
@@ -268,17 +322,19 @@
     p.innerHTML = `<strong>Submitchecker</strong>
       <label>Aanvinken vanaf <input type="number" min="0" class="sc-days"> dagen oud</label>
       <label><input type="checkbox" class="sc-auto"> automatisch bij laden</label>
+      <label title="Vergelijk met de Tweakers-feed en vink submits aan die er al lijken te staan"><input type="checkbox" class="sc-feed-opt"> check Tweakers-feed</label>
       <button type="button" class="sc-run">Nu controleren</button>
       <span class="sc-count"></span>`;
     table.parentNode.insertBefore(p, table);
-    const days = p.querySelector(".sc-days"), auto = p.querySelector(".sc-auto");
-    days.value = settings.days; auto.checked = settings.auto;
+    const days = p.querySelector(".sc-days"), auto = p.querySelector(".sc-auto"), feedOpt = p.querySelector(".sc-feed-opt");
+    days.value = settings.days; auto.checked = settings.auto; feedOpt.checked = settings.feed !== false;
     const save = () => {
-      settings = { days: Math.max(0, parseInt(days.value, 10) || 0), auto: auto.checked };
+      settings = { days: Math.max(0, parseInt(days.value, 10) || 0), auto: auto.checked, feed: feedOpt.checked };
       api.storage.local.set({ settings }).catch(() => {});
     };
     days.addEventListener("change", save);
     auto.addEventListener("change", save);
+    feedOpt.addEventListener("change", save);
     p.querySelector(".sc-run").addEventListener("click", (e) => { e.preventDefault(); run(); });
   }
 

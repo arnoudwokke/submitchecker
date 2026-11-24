@@ -7,3 +7,5 @@
 .sc-panel input[type=number] { width: 45px; }
 .sc-panel button { cursor: pointer; }
 .sc-dup { background: #e2d9f3; color: #432874; }
+.sc-feed { background: #cfe2ff; color: #084298; text-decoration: none; }
+.sc-feed:hover { text-decoration: underline; }
