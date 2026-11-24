@@ -174,7 +174,7 @@
     if (!(t.startsWith("{") || t.startsWith("["))) return null;
     let data;
     try { data = JSON.parse(t); } catch (e) { return null; }
-    const keys = ["created_utc", "datePublished", "published_at", "publishedAt", "created_at", "date"];
+    const keys = ["created_utc", "datePublished", "publishDate", "publicationDate", "published_at", "publishedAt", "created_at", "eventDate", "date"];
     const seen = new Set();
     const queue = [data];
     while (queue.length) {

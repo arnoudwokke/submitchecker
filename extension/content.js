@@ -7,6 +7,12 @@
     try {
       const u = new URL(url);
       const host = u.hostname.replace(/^(www|old|new|np|m|sh)\./, "");
+      // Persberichten van de Europese Commissie: inhoud komt uit een API
+      const ec = u.hostname === "ec.europa.eu" && u.pathname.match(/\/presscorner\/detail\/([a-z]{2})\/([a-z]+_\d+_\d+)/i);
+      if (ec) return [
+        `https://ec.europa.eu/commission/presscorner/api/documents?reference=${encodeURIComponent(ec[2].toUpperCase().replace(/_/g, "/"))}&language=${ec[1]}`,
+        url
+      ];
       if (host === "reddit.com" || host === "redd.it") {
         const m = u.pathname.match(/\/comments\/([a-z0-9]+)/i) || (host === "redd.it" && u.pathname.match(/^\/([a-z0-9]+)/i));
         if (m) return [
