@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "Tweakers Submitchecker",
+  "version": "1.7.1",
+  "description": "Haalt de bronartikelen uit de submit queue op, leest de publicatiedatum en vinkt submits van 2 dagen of ouder aan.",
+  "permissions": [
+    "storage"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://dsp.tweakers.net/publiceren/queue/submit*"
+      ],
+      "js": [
+        "detect.js",
+        "content.js"
+      ],
+      "css": [
+        "content.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "addons": {
+    "submitchecker@arnoud.local": {
+      "updates": [
+        {
+          "version": "1.7.1",
+          "update_link": "https://github.com/arnoudwokke/submitchecker/releases/download/v1.7.1/tweakers-submitchecker-1.7.1.xpi"
+        }
+      ]
+    }
+  }
+}

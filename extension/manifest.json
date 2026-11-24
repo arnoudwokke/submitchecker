@@ -1,0 +1,42 @@
+{
+  "manifest_version": 2,
+  "name": "Tweakers Submitchecker",
+  "version": "1.7.1",
+  "description": "Haalt de bronartikelen uit de submit queue op, leest de publicatiedatum en vinkt submits van 2 dagen of ouder aan.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "submitchecker@arnoud.local",
+      "strict_min_version": "109.0",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      },
+      "update_url": "https://raw.githubusercontent.com/arnoudwokke/submitchecker/main/updates.json"
+    }
+  },
+  "permissions": [
+    "<all_urls>",
+    "storage"
+  ],
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://dsp.tweakers.net/publiceren/queue/submit*"
+      ],
+      "js": [
+        "detect.js",
+        "content.js"
+      ],
+      "css": [
+        "content.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}
