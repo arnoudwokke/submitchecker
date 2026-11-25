@@ -150,6 +150,18 @@
   const STOP = new Set("een het van voor met dit dat die deze nog niet ook naar over door bij uit als aan zijn wordt worden heeft hebben kan zal zou wil gaat meer the and for with from that this will has have are was its into new nieuwe".split(" "));
   const ROMAN = { ii: "2", iii: "3", iv: "4", vi: "6", vii: "7", viii: "8", ix: "9" };
   const SYN = { executable: "exe", executables: "exe", exes: "exe", playstation: "ps", ps5: "ps5", "6s": "6s" };
+  // Gewone woorden waarmee een titel vaak begint: met hoofdletter, maar geen naam.
+  const COMMON_START = new Set(("de het een hoe waarom wat wie waar wanneer welke nieuwe nieuw grote groot kleine eerste laatste " +
+    "meer minder veel steeds bijna ook nog geen alle onderzoek onderzoekers hackers gebruikers klanten bedrijven overheid " +
+    "rechter rechtbank kabinet politie experts studie gerucht update review preview video podcast column analyse interview " +
+    "the a an how why what who when where new first last more most report study rumor rumour hackers users researchers " +
+    "officiele officieel eindelijk opnieuw weer zo dit deze die dat er is zijn wordt komt gaat krijgt brengt toont " +
+    "verloren originele populaire bekende oude europese amerikaanse chinese nederlandse belgische duitse britse japanse").split(" "));
+  // Overheden en instanties, ook als ze als gewoon woord geschreven zijn.
+  const INSTITUTIONS = new Set(("belastingdienst rijksoverheid overheid kabinet ministerie politie gemeente provincie " +
+    "commissie parlement tweede kamer rechter rechtbank toezichthouder autoriteit consumentenbond ncsc acm afm rdw uwv duo " +
+    "svb cbs knmi rivm defensie justitie europol interpol pentagon congres senaat").split(" ").map((w) => w.length > 4 ? w.replace(/(ing|en|es|s|e)$/, "") : w));
+
   // Woorden uit een titel; .strong bevat de "kenmerkende" woorden: namen, afkortingen, getallen.
   function words(t) {
     const set = new Set();
@@ -162,7 +174,8 @@
       if (!((w.length >= 3 || /^\d+$/.test(w) || /^[A-Z0-9]{2,}$/.test(orig)) && !STOP.has(w))) return;
       w = stem(w);
       set.add(w);
-      const strong = /\d/.test(w) || /^[A-Z0-9]{2,}$/.test(orig) || /[a-z][A-Z]/.test(orig) || (i > 0 && /^[A-Z]/.test(orig));
+      const strong = /\d/.test(w) || /^[A-Z0-9]{2,}$/.test(orig) || /[a-z][A-Z]/.test(orig) || INSTITUTIONS.has(w) ||
+        (/^[A-Z]/.test(orig) && (i > 0 || !COMMON_START.has(orig.toLowerCase())));
       if (strong) set.strong.add(w);
     });
     return set;
@@ -186,6 +199,8 @@
     // dezelfde kenmerkende namen/getallen (bv. "Cyberleek", "GTA", "6") en een flink deel van de korte titel
     const strong = shared.filter((w) => a.strong.has(w) || b.strong.has(w)).length;
     if ((jaccard >= 0.4 && (inter >= 3 || strong >= 1)) || (inter >= 3 && overlap >= 0.5)) return true;
+    // twee gedeelde woorden waarvan minstens één een naam van een bedrijf of overheid is
+    if (inter >= 2 && strong >= 1) return true;
     // korte titel die helemaal in de andere zit
     if (inter >= 2 && overlap === 1 && (jaccard >= 0.5 || strong >= 1)) return true;
     return strong >= 3 || (strong >= 2 && inter >= 3 && overlap >= 0.35);
