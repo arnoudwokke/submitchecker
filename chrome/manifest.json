@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Tweakers Submitchecker",
-  "version": "1.9.0",
+  "version": "1.9.1",
   "description": "Haalt de bronartikelen uit de submit queue op, leest de publicatiedatum en vinkt submits van 2 dagen of ouder aan.",
   "permissions": [
     "storage"

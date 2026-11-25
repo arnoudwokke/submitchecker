@@ -175,14 +175,19 @@
   }
   // true als twee titels over hetzelfde lijken te gaan
   function similar(a, b) {
-    if (!a || !b || a.size < 2 || b.size < 2) return false;
+    if (!a || !b || !a.size || !b.size) return false;
     const shared = [...a].filter((w) => b.has(w));
     const inter = shared.length;
+    // exact dezelfde woorden (bv. twee keer "Todoist beveiligingsincident")
+    if (inter === a.size && inter === b.size) return true;
+    if (a.size < 2 || b.size < 2) return false;
     const jaccard = inter / (a.size + b.size - inter);
     const overlap = inter / Math.min(a.size, b.size);
     // dezelfde kenmerkende namen/getallen (bv. "Cyberleek", "GTA", "6") en een flink deel van de korte titel
     const strong = shared.filter((w) => a.strong.has(w) || b.strong.has(w)).length;
     if ((jaccard >= 0.4 && (inter >= 3 || strong >= 1)) || (inter >= 3 && overlap >= 0.5)) return true;
+    // korte titel die helemaal in de andere zit
+    if (inter >= 2 && overlap === 1 && (jaccard >= 0.5 || strong >= 1)) return true;
     return strong >= 3 || (strong >= 2 && inter >= 3 && overlap >= 0.35);
   }
 
