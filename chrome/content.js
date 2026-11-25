@@ -156,7 +156,12 @@
     "rechter rechtbank kabinet politie experts studie gerucht update review preview video podcast column analyse interview " +
     "the a an how why what who when where new first last more most report study rumor rumour hackers users researchers " +
     "officiele officieel eindelijk opnieuw weer zo dit deze die dat er is zijn wordt komt gaat krijgt brengt toont " +
-    "verloren originele populaire bekende oude europese amerikaanse chinese nederlandse belgische duitse britse japanse").split(" "));
+    "verloren originele populaire bekende oude europese amerikaanse chinese nederlandse belgische duitse britse japanse " +
+    "iets niets niemand iedereen nu hier daar al toch maar alleen enkel mogelijk waarschijnlijk volgens na voor met in op bij " +
+    "van uit over tegen door om tot zonder kort gratis goedkope dure snelle eigen echte valse ruim half dubbel twee drie vier " +
+    "vijf tien honderden duizenden miljoenen kabinet ministerie gemeente deal korting aanbieding tip vraag waarschuwing " +
+    "is are this that these there here now just still only after before with in on at for from over against without " +
+    "free cheap big small major huge two three").split(" "));
   // Overheden en instanties, ook als ze als gewoon woord geschreven zijn.
   const INSTITUTIONS = new Set(("belastingdienst rijksoverheid overheid kabinet ministerie politie gemeente provincie " +
     "commissie parlement tweede kamer rechter rechtbank toezichthouder autoriteit consumentenbond ncsc acm afm rdw uwv duo " +
